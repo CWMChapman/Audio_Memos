@@ -23,8 +23,7 @@ public class MainActivity extends AppCompatActivity {
     // https://developer.android.com/reference/android/media/MediaRecorder?authuser=1
     // OVERVIEW: https://developer.android.com/guide/topics/media/mediarecorder
 
-    private static final String LOG_TAG = "AudioRecordTest";
-    private static final String DEFAULT_TAG = "Default Tag";
+    private static final String TAG = "AudioRecordTest";
     public static boolean isRecording = false;
 
 
@@ -53,28 +52,33 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void startRecording(Button b) {
-        Log.d(LOG_TAG, "Switching to recording mode.");
+        Log.d(TAG, "Switching to recording mode.");
         b.setBackgroundColor(Color.RED);
         b.setText("Recording...");
 
+        String state = Environment.getExternalStorageState();
+        Log.d(TAG, state);
+        if (state.equals(Environment.MEDIA_MOUNTED)) {
+
+        }
         File storageDirectory = Environment.getExternalStorageDirectory();
         File recordingFile;
         try {
-            recordingFile = File.createTempFile("sound", ".3gp", storageDirectory);
+            recordingFile = File.createTempFile("sound", ".m4a", storageDirectory);
         } catch (IOException e) {
-            Log.e(DEFAULT_TAG, "external storage access error");
+            Log.e(TAG, "external storage access error");
             return;
         }
 
         mr = new MediaRecorder();
         mr.setAudioSource(MediaRecorder.AudioSource.MIC);
-        mr.setOutputFormat(MediaRecorder.OutputFormat.THREE_GPP);
-        mr.setAudioEncoder(MediaRecorder.AudioEncoder.AMR_NB);
+        mr.setOutputFormat(MediaRecorder.OutputFormat.MPEG_4);
+        mr.setAudioEncoder(MediaRecorder.AudioEncoder.DEFAULT);
         mr.setOutputFile(recordingFile.getAbsolutePath());
     }
 
     public void stopRecording(Button b) {
-        Log.d(LOG_TAG, "Finishing recording.");
+        Log.d(TAG, "Finishing recording.");
         b.setBackgroundColor(Color.GRAY);
         b.setText("Record");
 
