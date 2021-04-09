@@ -24,7 +24,9 @@ public class MainActivity extends AppCompatActivity {
     // OVERVIEW: https://developer.android.com/guide/topics/media/mediarecorder
 
     private static final String TAG = "AudioRecordTest";
+    public static final int REQUEST_AUDIO_PERMISSION_CODE = 1;
     public static boolean isRecording = false;
+
 
 
     MediaRecorder mr;
@@ -58,13 +60,15 @@ public class MainActivity extends AppCompatActivity {
 
         String state = Environment.getExternalStorageState();
         Log.d(TAG, state);
-        if (state.equals(Environment.MEDIA_MOUNTED)) {
 
-        }
-        File storageDirectory = Environment.getExternalStorageDirectory();
+        Context ctx = this.getApplicationContext();
+//        File storageDirectory = Environment.getExternalStorageDirectory();
+        File audioDir = new File(ctx.getExternalFilesDir(Environment.DIRECTORY_PODCASTS), "AudioMemos");
+//        audioDir.mkdirs();
+
         File recordingFile;
         try {
-            recordingFile = File.createTempFile("sound", ".m4a", storageDirectory);
+            recordingFile = File.createTempFile("sound", ".m4a", audioDir);
         } catch (IOException e) {
             Log.e(TAG, "external storage access error");
             return;
@@ -73,6 +77,7 @@ public class MainActivity extends AppCompatActivity {
         mr = new MediaRecorder();
         mr.setAudioSource(MediaRecorder.AudioSource.MIC);
         mr.setOutputFormat(MediaRecorder.OutputFormat.MPEG_4);
+        Log.e(TAG, "Made it here");
         mr.setAudioEncoder(MediaRecorder.AudioEncoder.DEFAULT);
         mr.setOutputFile(recordingFile.getAbsolutePath());
     }
