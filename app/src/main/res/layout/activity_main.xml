@@ -14,7 +14,7 @@
         android:insetTop="10dp"
         android:insetRight="10dp"
         android:insetBottom="10dp"
-        android:onClick="record"
+        android:onClick="Record"
         android:text="Record"
         app:cornerRadius="50dp"
         android:textSize="30sp"

@@ -19,6 +19,8 @@ import android.widget.Button;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Calendar;
+import java.util.Date;
 
 import static android.Manifest.permission.RECORD_AUDIO;
 import static android.Manifest.permission.WRITE_EXTERNAL_STORAGE;
@@ -32,8 +34,6 @@ public class MainActivity extends AppCompatActivity {
 
     private static final String TAG = "AudioRecordTest";
     public static boolean isRecording = false;
-
-
 
     MediaRecorder mr;
 
@@ -53,9 +53,9 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    public void record(View v) {
+    public void Record(View v) {
         // callback function when tapping the record/recording... button
-        vibrate();
+        Vibrate();
         Button b = findViewById(R.id.record_button);
         if (isRecording == false) {
             startRecording(b);
@@ -70,18 +70,22 @@ public class MainActivity extends AppCompatActivity {
         b.setBackgroundColor(Color.RED);
         b.setText("Recording...");
 
+        // state = mounted or unmounted
         String state = Environment.getExternalStorageState();
         Log.d(TAG, state);
 
         Context ctx = this.getApplicationContext();
-//        File storageDirectory = Environment.getExternalStorageDirectory();
         File audioDir = new File(ctx.getExternalFilesDir(Environment.DIRECTORY_PODCASTS), "AudioMemos");
         audioDir.mkdirs();
-        Log.d(TAG, audioDir.getAbsolutePath());
+        Log.d(TAG, "Recording file location: " + audioDir.getAbsolutePath());
+
+        Date currentTime = Calendar.getInstance().getTime(); // current time
+        String curTimeStr = currentTime.toString().replace(" ", "_");
 
         File recordingFile;
         try {
-            recordingFile = File.createTempFile("sound", ".m4a", audioDir);
+            recordingFile = File.createTempFile(curTimeStr, ".m4a", audioDir);
+            Log.d(TAG, "Created file: " + recordingFile.getName());
         } catch (IOException e) {
             Log.e(TAG, "external storage access error");
             return;
@@ -92,6 +96,13 @@ public class MainActivity extends AppCompatActivity {
         mr.setOutputFormat(MediaRecorder.OutputFormat.MPEG_4);
         mr.setAudioEncoder(MediaRecorder.AudioEncoder.DEFAULT);
         mr.setOutputFile(recordingFile.getAbsolutePath());
+
+        try {
+            mr.prepare();
+        } catch (IOException e) {
+            Log.e(TAG, "prepare() failed");
+        }
+        mr.start();
     }
 
     public void stopRecording(Button b) {
@@ -107,15 +118,19 @@ public class MainActivity extends AppCompatActivity {
         }
         mr.release();
 
-        // now we need to list the file on the screen
+        // TODO: now we need to list the file on the screen
     }
+
+
+
+
 
     public boolean CheckPermissions() {
         boolean hasRecordAudio = ContextCompat.checkSelfPermission(getApplicationContext(), RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED;
         boolean hasWriteExternalStorage = ContextCompat.checkSelfPermission(getApplicationContext(), WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED;
 
 
-        // add other permissions later (like manage external storage, etc.)
+        // TODO: add other permissions later (like manage external storage, etc.)
 
         return hasRecordAudio && hasWriteExternalStorage;
     }
@@ -124,7 +139,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
-    public void vibrate() {
+    public void Vibrate() {
         Vibrator v = (Vibrator)getSystemService(Context.VIBRATOR_SERVICE);
         VibrationEffect ve = VibrationEffect.createOneShot(50, VibrationEffect.DEFAULT_AMPLITUDE);
         v.vibrate(ve);
