@@ -15,13 +15,19 @@ import android.os.VibrationEffect;
 import android.os.Vibrator;
 import android.util.Log;
 import android.view.View;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.ListView;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.Array;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
 
+import static android.Manifest.permission.READ_EXTERNAL_STORAGE;
 import static android.Manifest.permission.RECORD_AUDIO;
 import static android.Manifest.permission.WRITE_EXTERNAL_STORAGE;
 
@@ -45,6 +51,7 @@ public class MainActivity extends AppCompatActivity {
         Button b = findViewById(R.id.record_button);
         b.setBackgroundColor(Color.GRAY);
         b.setTextColor(Color.WHITE);
+        UpdateListView(); // refreshes the list view
 
         boolean hasPermissions = CheckPermissions();
 
@@ -117,25 +124,48 @@ public class MainActivity extends AppCompatActivity {
             //Ignore
         }
         mr.release();
+        UpdateListView(); // refreshes the list view
 
         // TODO: now we need to list the file on the screen
     }
 
 
+    public void UpdateListView() {
+        // this function is called at specific moments which would like finishing recoreding or deleting a recording that would need an updated list of files
+        // List view: https://stackoverflow.com/questions/20750118/displaying-list-of-strings-in-android/20750202
 
+        File audioDir = new File(this.getApplicationContext().getExternalFilesDir(Environment.DIRECTORY_PODCASTS), "AudioMemos");
+        audioDir.mkdirs(); // makes this directory if one does not already exist (i.e. when a user first downloads this application)
+        File[] audioDirContents = audioDir.listFiles();
+        ArrayList<File> listViewContents = new ArrayList<File>(Arrays.asList(audioDirContents));
+        ArrayList<String> audioDirContentsNames = new ArrayList<String>();
+        String s = "";
+        for (File f : audioDirContents) {
+            audioDirContentsNames.add(f.getName());
+            s += f.getName() + ", ";
+        }
+        Log.d(TAG, s);
+        ArrayAdapter adapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, android.R.id.text1, audioDirContentsNames);
+        ListView lv = (ListView) this.findViewById(R.id.lv_AudioFiles);
+//        String AudioMemosDirectoryPath = audioDir.getPath();
+
+
+
+    }
 
 
     public boolean CheckPermissions() {
         boolean hasRecordAudio = ContextCompat.checkSelfPermission(getApplicationContext(), RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED;
         boolean hasWriteExternalStorage = ContextCompat.checkSelfPermission(getApplicationContext(), WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED;
+        boolean hasReadExternalStorage = ContextCompat.checkSelfPermission(getApplicationContext(), READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED;
 
 
         // TODO: add other permissions later (like manage external storage, etc.)
 
-        return hasRecordAudio && hasWriteExternalStorage;
+        return hasRecordAudio && hasWriteExternalStorage && hasReadExternalStorage;
     }
     private void RequestPermissions() {
-        ActivityCompat.requestPermissions(this, new String[] {RECORD_AUDIO, WRITE_EXTERNAL_STORAGE}, 1 );
+        ActivityCompat.requestPermissions(this, new String[] {RECORD_AUDIO, WRITE_EXTERNAL_STORAGE, READ_EXTERNAL_STORAGE}, 1 );
     }
 
 
