@@ -1,8 +1,12 @@
 package edu.fandm.cchapman.audiomemos;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 
+import android.Manifest;
 import android.content.Context;
+import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.media.MediaRecorder;
 import android.os.Bundle;
@@ -16,6 +20,9 @@ import android.widget.Button;
 import java.io.File;
 import java.io.IOException;
 
+import static android.Manifest.permission.RECORD_AUDIO;
+import static android.Manifest.permission.WRITE_EXTERNAL_STORAGE;
+
 
 public class MainActivity extends AppCompatActivity {
 
@@ -24,7 +31,6 @@ public class MainActivity extends AppCompatActivity {
     // OVERVIEW: https://developer.android.com/guide/topics/media/mediarecorder
 
     private static final String TAG = "AudioRecordTest";
-    public static final int REQUEST_AUDIO_PERMISSION_CODE = 1;
     public static boolean isRecording = false;
 
 
@@ -39,6 +45,12 @@ public class MainActivity extends AppCompatActivity {
         Button b = findViewById(R.id.record_button);
         b.setBackgroundColor(Color.GRAY);
         b.setTextColor(Color.WHITE);
+
+        boolean hasPermissions = CheckPermissions();
+
+        if(!hasPermissions) {
+            RequestPermissions();
+        }
     }
 
     public void record(View v) {
@@ -64,7 +76,8 @@ public class MainActivity extends AppCompatActivity {
         Context ctx = this.getApplicationContext();
 //        File storageDirectory = Environment.getExternalStorageDirectory();
         File audioDir = new File(ctx.getExternalFilesDir(Environment.DIRECTORY_PODCASTS), "AudioMemos");
-//        audioDir.mkdirs();
+        audioDir.mkdirs();
+        Log.d(TAG, audioDir.getAbsolutePath());
 
         File recordingFile;
         try {
@@ -77,7 +90,6 @@ public class MainActivity extends AppCompatActivity {
         mr = new MediaRecorder();
         mr.setAudioSource(MediaRecorder.AudioSource.MIC);
         mr.setOutputFormat(MediaRecorder.OutputFormat.MPEG_4);
-        Log.e(TAG, "Made it here");
         mr.setAudioEncoder(MediaRecorder.AudioEncoder.DEFAULT);
         mr.setOutputFile(recordingFile.getAbsolutePath());
     }
@@ -87,9 +99,28 @@ public class MainActivity extends AppCompatActivity {
         b.setBackgroundColor(Color.GRAY);
         b.setText("Record");
 
-        mr.stop();
+        // https://stackoverflow.com/questions/18430090/app-crashes-when-recorder-is-supposed-to-stop/18430237
+        try{
+            mr.stop();
+        }catch(RuntimeException ex) {
+            //Ignore
+        }
         mr.release();
+
         // now we need to list the file on the screen
+    }
+
+    public boolean CheckPermissions() {
+        boolean hasRecordAudio = ContextCompat.checkSelfPermission(getApplicationContext(), RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED;
+        boolean hasWriteExternalStorage = ContextCompat.checkSelfPermission(getApplicationContext(), WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED;
+
+
+        // add other permissions later (like manage external storage, etc.)
+
+        return hasRecordAudio && hasWriteExternalStorage;
+    }
+    private void RequestPermissions() {
+        ActivityCompat.requestPermissions(this, new String[] {RECORD_AUDIO, WRITE_EXTERNAL_STORAGE}, 1 );
     }
 
 
