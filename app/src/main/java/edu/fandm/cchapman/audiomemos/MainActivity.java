@@ -1,13 +1,16 @@
 package edu.fandm.cchapman.audiomemos;
 
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
 import android.Manifest;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
+import android.media.MediaPlayer;
 import android.media.MediaRecorder;
 import android.os.Bundle;
 import android.os.Environment;
@@ -21,6 +24,7 @@ import android.widget.Button;
 import android.widget.ListView;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.lang.reflect.Array;
 import java.util.ArrayList;
@@ -35,7 +39,7 @@ import static android.Manifest.permission.RECORD_AUDIO;
 import static android.Manifest.permission.WRITE_EXTERNAL_STORAGE;
 
 
-public class MainActivity extends AppCompatActivity implements AdapterView.OnItemClickListener {
+public class MainActivity extends AppCompatActivity implements AdapterView.OnItemClickListener, AdapterView.OnItemLongClickListener {
 
     // USING MediaRecorder API
     // https://developer.android.com/reference/android/media/MediaRecorder?authuser=1
@@ -153,6 +157,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
 
 
         lv.setOnItemClickListener(this);
+        lv.setOnItemLongClickListener(this);
 
         // TODO: Set on click listener
     }
@@ -168,7 +173,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         return hasRecordAudio && hasWriteExternalStorage && hasReadExternalStorage && hasManageExternalStorage;
     }
     private void RequestPermissions() {
-        ActivityCompat.requestPermissions(this, new String[] {RECORD_AUDIO, WRITE_EXTERNAL_STORAGE, READ_EXTERNAL_STORAGE}, 1 );
+        ActivityCompat.requestPermissions(this, new String[] {RECORD_AUDIO, WRITE_EXTERNAL_STORAGE, READ_EXTERNAL_STORAGE, MANAGE_EXTERNAL_STORAGE}, 1 );
     }
 
 
@@ -186,5 +191,55 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         File audioFile = new File(audioFilePath);
         Log.d(TAG, audioFileName + " clicked!");
 
+        // https://developer.android.com/reference/android/media/MediaPlayer
+        MediaPlayer mp = new MediaPlayer();
+        try {
+            // I had problems setting the data source as a string and it turns out that thats normal:
+            // https://stackoverflow.com/questions/9625680/mediaplayer-setdatasource-better-to-use-path-or-filedescriptor
+            // https://stackoverflow.com/questions/3773262/mediaplayer-cant-play-audio-files-from-program-data-folder
+            mp.setDataSource((new FileInputStream(audioFilePath)).getFD());
+            mp.prepare();
+        } catch (IOException ioe) {
+            Log.d(TAG, "IOE! Cannot set Datasource");
+        }
+        mp.setLooping(false);
+        mp.start();
+
+    }
+
+    @Override
+    public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
+        File audioDir = new File(this.getApplicationContext().getExternalFilesDir(Environment.DIRECTORY_PODCASTS), "AudioMemos");
+        String audioFileName = parent.getItemAtPosition(position).toString();
+        String audioFilePath = audioDir + "/" + audioFileName;
+        File audioFile = new File(audioFilePath);
+        Log.d(TAG, audioFileName + " LONG clicked!");
+
+        // Alert Dialogue
+        // https://developer.android.com/guide/topics/ui/dialogs
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        // Add the buttons
+        builder.setMessage("Do you want to delete this recording?");
+        builder.setPositiveButton("Delete", new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int id) {
+                // User clicked OK button
+                Log.d(TAG, "User clicked Delete Button");
+                audioFile.delete();
+
+                UpdateListView(); // because we want to remove that entry from the listview
+            }
+        });
+        builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int id) {
+                // User cancelled the dialog
+                Log.d(TAG, "User clicked Cancel Button");
+            }
+        });
+
+        // Create the AlertDialog
+        AlertDialog dialog = builder.create();
+        dialog.show();
+
+        return true;
     }
 }
