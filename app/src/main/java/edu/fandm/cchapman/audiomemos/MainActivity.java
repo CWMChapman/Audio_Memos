@@ -55,7 +55,6 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
 
     private static final String TAG = "AudioRecordTest";
     public static boolean isRecording = false;
-
     MediaRecorder mr;
 
 
@@ -66,7 +65,6 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         configureView(); // sets layout file and configures button colors, etc.
 
         boolean hasPermissions = CheckPermissions();
-
         if(!hasPermissions) {
             RequestPermissions();
         }
@@ -108,25 +106,35 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         // callback function when tapping the record/recording... button
         Vibrate();
         Button b = findViewById(R.id.record_button);
-        if (isRecording == false) {
-            startRecording(b);
-        } else {
-            stopRecording(b);
+        boolean hasPermission = CheckPermissions();
+        Log.d(TAG, "hasPermission: " + hasPermission);
+        if(hasPermission) {
+            if (isRecording == false) {
+                Log.d(TAG, "Switching to recording mode.");
+                b.setBackgroundColor(Color.RED);
+                b.setText("Recording...");
+                startRecording(b);
+            } else {
+                Log.d(TAG, "Finishing recording.");
+                b.setBackgroundColor(Color.GRAY);
+                b.setText("Record");
+                stopRecording(b);
+            }
+            isRecording = !isRecording; // toggle recording status
         }
-        isRecording = !isRecording; // toggle recording status
+        else {
+            RequestPermissions();
+        }
+
     }
 
     public void startRecording(Button b) {
-        Log.d(TAG, "Switching to recording mode.");
-        b.setBackgroundColor(Color.RED);
-        b.setText("Recording...");
-
         // state = mounted or unmounted
         String state = Environment.getExternalStorageState();
         Log.d(TAG, state);
 
         Context ctx = this.getApplicationContext();
-        File audioDir = new File(ctx.getExternalFilesDir(Environment.DIRECTORY_PODCASTS), "AudioMemos");
+        File audioDir = new File(ctx.getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS), "AudioMemos");
         audioDir.mkdirs();
         String audioDirPath = audioDir.getAbsolutePath();
         Log.d(TAG, "Recording file location: " + audioDirPath);
@@ -158,10 +166,6 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
     }
 
     public void stopRecording(Button b) {
-        Log.d(TAG, "Finishing recording.");
-        b.setBackgroundColor(Color.GRAY);
-        b.setText("Record");
-
         // https://stackoverflow.com/questions/18430090/app-crashes-when-recorder-is-supposed-to-stop/18430237
         try{
             mr.stop();
@@ -171,7 +175,6 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         mr.release();
         UpdateListView(); // refreshes the list view
 
-        // TODO: now we need to list the file on the screen
     }
 
 
@@ -179,7 +182,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         // this function is called at specific moments which would like finishing recoreding or deleting a recording that would need an updated list of files
         // List view: https://stackoverflow.com/questions/20750118/displaying-list-of-strings-in-android/20750202
 
-        File audioDir = new File(this.getApplicationContext().getExternalFilesDir(Environment.DIRECTORY_PODCASTS), "AudioMemos");
+        File audioDir = new File(this.getApplicationContext().getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS), "AudioMemos");
         audioDir.mkdirs(); // makes this directory if one does not already exist (i.e. when a user first downloads this application)
         File[] audioDirContents = audioDir.listFiles();
         ArrayList<File> listViewContents = new ArrayList<File>(Arrays.asList(audioDirContents));
@@ -203,13 +206,14 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         boolean hasRecordAudio = ContextCompat.checkSelfPermission(getApplicationContext(), RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED;
         boolean hasWriteExternalStorage = ContextCompat.checkSelfPermission(getApplicationContext(), WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED;
         boolean hasReadExternalStorage = ContextCompat.checkSelfPermission(getApplicationContext(), READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED;
-        boolean hasManageExternalStorage = ContextCompat.checkSelfPermission(getApplicationContext(), MANAGE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED;
 
-
-        return hasRecordAudio && hasWriteExternalStorage && hasReadExternalStorage && hasManageExternalStorage;
+        Log.d(TAG, "hasRecordAudio: " + hasRecordAudio);
+        Log.d(TAG, "hasWriteExternalStorage: " + hasWriteExternalStorage);
+        Log.d(TAG, "hasReadExternalStorage: " + hasReadExternalStorage);
+        return hasRecordAudio && hasWriteExternalStorage && hasReadExternalStorage;
     }
     private void RequestPermissions() {
-        ActivityCompat.requestPermissions(this, new String[] {RECORD_AUDIO, WRITE_EXTERNAL_STORAGE, READ_EXTERNAL_STORAGE, MANAGE_EXTERNAL_STORAGE}, 1 );
+        ActivityCompat.requestPermissions(this, new String[] {RECORD_AUDIO, WRITE_EXTERNAL_STORAGE, READ_EXTERNAL_STORAGE}, 1 );
     }
 
 
@@ -221,7 +225,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
 
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-        File audioDir = new File(this.getApplicationContext().getExternalFilesDir(Environment.DIRECTORY_PODCASTS), "AudioMemos");
+        File audioDir = new File(this.getApplicationContext().getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS), "AudioMemos");
         String audioFileName = parent.getItemAtPosition(position).toString();
         String audioFilePath = audioDir + "/" + audioFileName;
         File audioFile = new File(audioFilePath);
@@ -254,7 +258,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
 
     @Override
     public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
-        File audioDir = new File(this.getApplicationContext().getExternalFilesDir(Environment.DIRECTORY_PODCASTS), "AudioMemos");
+        File audioDir = new File(this.getApplicationContext().getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS), "AudioMemos");
         String audioFileName = parent.getItemAtPosition(position).toString();
         String audioFilePath = audioDir + "/" + audioFileName;
         File audioFile = new File(audioFilePath);
