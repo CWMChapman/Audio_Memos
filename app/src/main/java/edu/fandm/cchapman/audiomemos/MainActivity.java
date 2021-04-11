@@ -25,6 +25,7 @@ import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
+import java.util.Comparator;
 import java.util.Date;
 
 import static android.Manifest.permission.READ_EXTERNAL_STORAGE;
@@ -84,19 +85,20 @@ public class MainActivity extends AppCompatActivity {
         Context ctx = this.getApplicationContext();
         File audioDir = new File(ctx.getExternalFilesDir(Environment.DIRECTORY_PODCASTS), "AudioMemos");
         audioDir.mkdirs();
-        Log.d(TAG, "Recording file location: " + audioDir.getAbsolutePath());
+        String audioDirPath = audioDir.getAbsolutePath();
+        Log.d(TAG, "Recording file location: " + audioDirPath);
 
         Date currentTime = Calendar.getInstance().getTime(); // current time
         String curTimeStr = currentTime.toString().replace(" ", "_");
 
-        File recordingFile;
-        try {
-            recordingFile = File.createTempFile(curTimeStr, ".m4a", audioDir);
-            Log.d(TAG, "Created file: " + recordingFile.getName());
-        } catch (IOException e) {
-            Log.e(TAG, "external storage access error");
-            return;
-        }
+        File recordingFile = new File(audioDirPath + "/" + curTimeStr + ".m4a");
+        Log.d(TAG, "Created file: " + recordingFile.getName());
+
+//        try {
+//        } catch (IOException e) {
+//            Log.e(TAG, "external storage access error");
+//            return;
+//        }
 
         mr = new MediaRecorder();
         mr.setAudioSource(MediaRecorder.AudioSource.MIC);
@@ -139,18 +141,15 @@ public class MainActivity extends AppCompatActivity {
         File[] audioDirContents = audioDir.listFiles();
         ArrayList<File> listViewContents = new ArrayList<File>(Arrays.asList(audioDirContents));
         ArrayList<String> audioDirContentsNames = new ArrayList<String>();
-        String s = "";
         for (File f : audioDirContents) {
             audioDirContentsNames.add(f.getName());
-            s += f.getName() + ", ";
         }
-        Log.d(TAG, s);
+        audioDirContentsNames.sort(Comparator.comparing(String::toString)); // sort the list alphabetically
         ArrayAdapter adapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, android.R.id.text1, audioDirContentsNames);
         ListView lv = (ListView) this.findViewById(R.id.lv_AudioFiles);
-//        String AudioMemosDirectoryPath = audioDir.getPath();
+        lv.setAdapter(adapter); // populate the list view
 
-
-
+        // TODO: Set on click listener
     }
 
 
