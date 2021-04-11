@@ -15,6 +15,7 @@ import android.os.VibrationEffect;
 import android.os.Vibrator;
 import android.util.Log;
 import android.view.View;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ListView;
@@ -28,12 +29,13 @@ import java.util.Calendar;
 import java.util.Comparator;
 import java.util.Date;
 
+import static android.Manifest.permission.MANAGE_EXTERNAL_STORAGE;
 import static android.Manifest.permission.READ_EXTERNAL_STORAGE;
 import static android.Manifest.permission.RECORD_AUDIO;
 import static android.Manifest.permission.WRITE_EXTERNAL_STORAGE;
 
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements AdapterView.OnItemClickListener {
 
     // USING MediaRecorder API
     // https://developer.android.com/reference/android/media/MediaRecorder?authuser=1
@@ -149,6 +151,9 @@ public class MainActivity extends AppCompatActivity {
         ListView lv = (ListView) this.findViewById(R.id.lv_AudioFiles);
         lv.setAdapter(adapter); // populate the list view
 
+
+        lv.setOnItemClickListener(this);
+
         // TODO: Set on click listener
     }
 
@@ -157,11 +162,10 @@ public class MainActivity extends AppCompatActivity {
         boolean hasRecordAudio = ContextCompat.checkSelfPermission(getApplicationContext(), RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED;
         boolean hasWriteExternalStorage = ContextCompat.checkSelfPermission(getApplicationContext(), WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED;
         boolean hasReadExternalStorage = ContextCompat.checkSelfPermission(getApplicationContext(), READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED;
+        boolean hasManageExternalStorage = ContextCompat.checkSelfPermission(getApplicationContext(), MANAGE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED;
 
 
-        // TODO: add other permissions later (like manage external storage, etc.)
-
-        return hasRecordAudio && hasWriteExternalStorage && hasReadExternalStorage;
+        return hasRecordAudio && hasWriteExternalStorage && hasReadExternalStorage && hasManageExternalStorage;
     }
     private void RequestPermissions() {
         ActivityCompat.requestPermissions(this, new String[] {RECORD_AUDIO, WRITE_EXTERNAL_STORAGE, READ_EXTERNAL_STORAGE}, 1 );
@@ -172,5 +176,15 @@ public class MainActivity extends AppCompatActivity {
         Vibrator v = (Vibrator)getSystemService(Context.VIBRATOR_SERVICE);
         VibrationEffect ve = VibrationEffect.createOneShot(50, VibrationEffect.DEFAULT_AMPLITUDE);
         v.vibrate(ve);
+    }
+
+    @Override
+    public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+        File audioDir = new File(this.getApplicationContext().getExternalFilesDir(Environment.DIRECTORY_PODCASTS), "AudioMemos");
+        String audioFileName = parent.getItemAtPosition(position).toString();
+        String audioFilePath = audioDir + "/" + audioFileName;
+        File audioFile = new File(audioFilePath);
+        Log.d(TAG, audioFileName + " clicked!");
+
     }
 }
