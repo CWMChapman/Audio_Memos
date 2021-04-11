@@ -9,7 +9,9 @@ import android.Manifest;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.pm.PackageManager;
+import android.content.res.ColorStateList;
 import android.content.res.Configuration;
+import android.content.res.TypedArray;
 import android.graphics.Color;
 import android.media.MediaPlayer;
 import android.media.MediaRecorder;
@@ -18,11 +20,14 @@ import android.os.Environment;
 import android.os.VibrationEffect;
 import android.os.Vibrator;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ListView;
+import android.widget.TextView;
+import android.widget.Toast;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -183,7 +188,8 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
             audioDirContentsNames.add(f.getName());
         }
         audioDirContentsNames.sort(Comparator.comparing(String::toString)); // sort the list alphabetically
-        ArrayAdapter adapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, android.R.id.text1, audioDirContentsNames);
+//        ArrayAdapter adapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_2, android.R.id.text2, audioDirContentsNames);
+        ArrayAdapter adapter = new ArrayAdapter<String>(this, R.layout.textview_for_listview, audioDirContentsNames);
         ListView lv = (ListView) this.findViewById(R.id.lv_AudioFiles);
         lv.setAdapter(adapter); // populate the list view
 
@@ -191,7 +197,6 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         lv.setOnItemClickListener(this);
         lv.setOnItemLongClickListener(this);
 
-        // TODO: Set on click listener
     }
 
 
@@ -222,6 +227,11 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         String audioFilePath = audioDir + "/" + audioFileName;
         File audioFile = new File(audioFilePath);
         Log.d(TAG, audioFileName + " clicked!");
+//        ;
+//        int[] attrs = new int[]{R.attr.selectableItemBackground};
+//        TypedArray typedArray = this.obtainStyledAttributes(attrs);
+//        int backgroundResource = typedArray.getResourceId(0, 0);
+//        view.setBackgroundResource(backgroundResource);
 
         // https://developer.android.com/reference/android/media/MediaPlayer
         MediaPlayer mp = new MediaPlayer();
@@ -236,6 +246,10 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         }
         mp.setLooping(false);
         mp.start();
+
+        Toast t = Toast.makeText(this.getApplicationContext(), "Playing Recording", Toast.LENGTH_SHORT);
+        t.setGravity(Gravity.CENTER, 0, -1000);
+        t.show();
 
     }
 
@@ -258,6 +272,10 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
                 Log.d(TAG, "User clicked Delete Button");
                 audioFile.delete();
 
+                Toast t = Toast.makeText(MainActivity.super.getApplicationContext(), "Recording Deleted", Toast.LENGTH_SHORT);
+                t.setGravity(Gravity.CENTER, 0, -1000);
+                t.show();
+
                 UpdateListView(); // because we want to remove that entry from the listview
             }
         });
@@ -265,12 +283,17 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
             public void onClick(DialogInterface dialog, int id) {
                 // User cancelled the dialog
                 Log.d(TAG, "User clicked Cancel Button");
+
+                Toast t = Toast.makeText(MainActivity.super.getApplicationContext(), "Recording Not Deleted", Toast.LENGTH_SHORT);
+                t.setGravity(Gravity.CENTER, 0, -1000);
+                t.show();
             }
         });
 
         // Create the AlertDialog
         AlertDialog dialog = builder.create();
         dialog.show();
+
 
         return true;
     }
