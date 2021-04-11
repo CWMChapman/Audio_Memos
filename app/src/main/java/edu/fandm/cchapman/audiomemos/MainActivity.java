@@ -9,6 +9,7 @@ import android.Manifest;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.pm.PackageManager;
+import android.content.res.Configuration;
 import android.graphics.Color;
 import android.media.MediaPlayer;
 import android.media.MediaRecorder;
@@ -45,6 +46,8 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
     // https://developer.android.com/reference/android/media/MediaRecorder?authuser=1
     // OVERVIEW: https://developer.android.com/guide/topics/media/mediarecorder
 
+    // App Icon Credit (Free Use): https://pixabay.com/vectors/microphone-icon-logo-design-mic-3404243/
+
     private static final String TAG = "AudioRecordTest";
     public static boolean isRecording = false;
 
@@ -54,16 +57,45 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
-        Button b = findViewById(R.id.record_button);
-        b.setBackgroundColor(Color.GRAY);
-        b.setTextColor(Color.WHITE);
-        UpdateListView(); // refreshes the list view
+
+        configureView(); // sets layout file and configures button colors, etc.
 
         boolean hasPermissions = CheckPermissions();
 
         if(!hasPermissions) {
             RequestPermissions();
+        }
+    }
+
+    public void configureView() {
+        // https://stackoverflow.com/questions/3663665/how-can-i-get-the-current-screen-orientation
+        if (this.getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT) {
+            setContentView(R.layout.activity_main);
+        } else {
+            setContentView(R.layout.activity_main_horizontal);
+        }
+
+        Button b = findViewById(R.id.record_button);
+        b.setBackgroundColor(Color.GRAY);
+        b.setTextColor(Color.WHITE);
+        UpdateListView(); // refreshes the list view
+    }
+
+    @Override
+    public void onConfigurationChanged(Configuration newConfig) {
+        Log.d(TAG, "config changed");
+        super.onConfigurationChanged(newConfig);
+
+        // https://developer.android.com/guide/topics/resources/runtime-changes.html
+        // Checks the orientation of the screen
+        if (newConfig.orientation == Configuration.ORIENTATION_LANDSCAPE) {
+            setContentView(R.layout.activity_main_horizontal);
+            Log.d(TAG, "setting horizontal content view");
+            configureView();
+        } else if (newConfig.orientation == Configuration.ORIENTATION_PORTRAIT){
+            setContentView((R.layout.activity_main));
+            Log.d(TAG, "setting vertical content view");
+            configureView();
         }
     }
 
