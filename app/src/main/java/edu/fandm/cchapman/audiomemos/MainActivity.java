@@ -188,7 +188,6 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
             audioDirContentsNames.add(f.getName());
         }
         audioDirContentsNames.sort(Comparator.comparing(String::toString)); // sort the list alphabetically
-//        ArrayAdapter adapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_2, android.R.id.text2, audioDirContentsNames);
         ArrayAdapter adapter = new ArrayAdapter<String>(this, R.layout.textview_for_listview, audioDirContentsNames);
         ListView lv = (ListView) this.findViewById(R.id.lv_AudioFiles);
         lv.setAdapter(adapter); // populate the list view
